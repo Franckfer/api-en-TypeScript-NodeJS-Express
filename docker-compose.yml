@@ -1,0 +1,16 @@
+version: '3.1'
+
+services:
+  my_database:
+    image: mysql:5.7
+    volumes:
+      - ./mysql/init.sql:/docker-entrypoint-initdb.d/init.sql # creo un volumen dentro del contenedor para poder crear la base de datos
+    command: --init-file /docker-entrypoint-initdb.d/init.sql # inicializo el script sobre la base de datos
+    ports:
+      - "3312:3306"  # "3312 puerto que cambia : 3306 puerto por defecto"
+    environment:
+      MYSQL_DATABASE: "test_docker"
+      MYSQL_ROOT_USER: "user"
+      MYSQL_ROOT_PASSWORD: "secret"
+      MYSQL_USER: "user"
+      MYSQL_PASSWORD: "secret"
