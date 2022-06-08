@@ -1,9 +1,8 @@
 import express from "express";
 import morgan from "morgan";
 import cors from "cors";
-import { UserRouter } from "./routes/user.router";
+import { UserRouter } from "./user/user.router";
 import { ConfigServer } from "./config/config";
-import { Connection, createConnection, DataSource } from "typeorm";
 
 class ServerBootstrap extends ConfigServer {
   public app: express.Application = express();
@@ -16,7 +15,9 @@ class ServerBootstrap extends ConfigServer {
     this.app.use(express.urlencoded({ extended: true }));
     this.app.use(morgan("dev"));
     this.app.use(cors());
-
+    
+    this.dbConnect().catch(error => console.log(error))  
+      
     this.app.use("/api", this.routers());
     this.listen();
   }
@@ -25,14 +26,10 @@ class ServerBootstrap extends ConfigServer {
     return [new UserRouter().router];
   }
 
-  //! Deprecated in the new version of TypeORM
-  // async dbConnect(): Promise<Connection> {
-  //   return await createConnection(this.typeORMConfig)
-  // }  
-
-  async dbConnect(): Promise<DataSource> {
-    return await new DataSource(this.typeORMConfig).initialize()
-  }
+  //Creo la funcion que me permite conectarse a la base de datos
+  // async dbConnect(): Promise<DataSource> {
+  //   return await new DataSource(this.typeORMConfig).initialize()
+  // }
   
   public listen() {
     this.app.listen(this.port, () => {

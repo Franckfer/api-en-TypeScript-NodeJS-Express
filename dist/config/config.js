@@ -22,9 +22,20 @@ var __importStar = (this && this.__importStar) || function (mod) {
     __setModuleDefault(result, mod);
     return result;
 };
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.ConfigServer = void 0;
 const dotenv = __importStar(require("dotenv"));
+const typeorm_1 = require("typeorm");
+const typeorm_naming_strategies_1 = require("typeorm-naming-strategies");
 class ConfigServer {
     constructor() {
         const nodeNameEnv = this.createPathEnv(this.nodeEnv);
@@ -32,24 +43,48 @@ class ConfigServer {
             path: nodeNameEnv
         });
     }
-    getEviroment(k) {
+    getEnvironment(k) {
         return process.env[k];
         // process.env[PORT]
     }
     getNumberEnv(k) {
-        return Number(this.getEviroment(k));
+        return Number(this.getEnvironment(k));
     }
     get nodeEnv() {
         var _a;
-        return ((_a = this.getEviroment('NODE_ENV')) === null || _a === void 0 ? void 0 : _a.trim()) || "";
+        return ((_a = this.getEnvironment("NODE_ENV")) === null || _a === void 0 ? void 0 : _a.trim()) || "";
     }
     createPathEnv(path) {
-        const arrEnv = ['env'];
+        const arrEnv = ["env"]; //['hola', 'mundo'] => 'hola.mundo'
         if (path.length > 0) {
-            const stringToArray = path.split('.');
+            const stringToArray = path.split(".");
             arrEnv.unshift(...stringToArray);
         }
-        return '.' + arrEnv.join('.');
+        return "." + arrEnv.join(".");
+    }
+    //! Deprecated in the new version of TypeORM use DataSourceOptions
+    get typeORMConfig() {
+        return {
+            type: 'mysql',
+            host: this.getEnvironment('DB_HOST'),
+            port: this.getNumberEnv('DB_PORT'),
+            username: this.getEnvironment('DB_USER'),
+            password: this.getEnvironment('DB_PASSWORD'),
+            database: this.getEnvironment('DB_DATABASE'),
+            //de esta forma podemos leer y setear el valor de la variable de entorno
+            entities: [__dirname + '/../**/*.entity{.ts,.js}'],
+            migrations: [__dirname + '/../../migrations/*{.ts,.js}'],
+            synchronize: true,
+            logging: false,
+            namingStrategy: new typeorm_naming_strategies_1.SnakeNamingStrategy(),
+            // nombre de las tablas en (snake_case)          
+        };
+    }
+    //! Deprecated in the new version of TypeORM
+    dbConnect() {
+        return __awaiter(this, void 0, void 0, function* () {
+            return yield (0, typeorm_1.createConnection)(this.typeORMConfig);
+        });
     }
 }
 exports.ConfigServer = ConfigServer;

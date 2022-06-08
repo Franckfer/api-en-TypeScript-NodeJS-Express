@@ -6,23 +6,29 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = __importDefault(require("express"));
 const morgan_1 = __importDefault(require("morgan"));
 const cors_1 = __importDefault(require("cors"));
-const user_router_1 = require("./routes/user.router");
+const user_router_1 = require("./user/user.router");
 const config_1 = require("./config/config");
 class ServerBootstrap extends config_1.ConfigServer {
+    // creamos la funcion constructora que sirve para levantar el servidor
     constructor() {
         super();
         this.app = (0, express_1.default)();
-        this.port = this.getNumberEnv('PORT') || 8000;
+        this.port = this.getNumberEnv('PORT');
         this.app.use(express_1.default.json());
         this.app.use(express_1.default.urlencoded({ extended: true }));
         this.app.use((0, morgan_1.default)("dev"));
         this.app.use((0, cors_1.default)());
+        this.dbConnect().catch(error => console.log(error));
         this.app.use("/api", this.routers());
         this.listen();
     }
     routers() {
         return [new user_router_1.UserRouter().router];
     }
+    //Creo la funcion que me permite conectarse a la base de datos
+    // async dbConnect(): Promise<DataSource> {
+    //   return await new DataSource(this.typeORMConfig).initialize()
+    // }
     listen() {
         this.app.listen(this.port, () => {
             console.log("Server listening on port => " + this.port);
